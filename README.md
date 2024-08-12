@@ -6,11 +6,7 @@ A simple SDK for seamlessly integrating blinksights analytics into your blinks.
 
 ### Install the blinksights sdk
 ```
-npm install @blinksights-sdk
-//or
-yarn add @blinksights-sdk
-//or
-pnpm add @blinksights-sdk
+npm install blinksights-sdk
 ```
 ### Create a new Blinksights client
 ```

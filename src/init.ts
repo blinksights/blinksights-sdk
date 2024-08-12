@@ -1,5 +1,6 @@
 import axios, {AxiosInstance} from 'axios';
-import { ActionGetResponse } from '@solana/actions'
+import { ActionGetResponse } from '@solana/actions';
+import { API_URL } from './constants';
 
 export class BlinksightsClient {
     private axios: AxiosInstance;
@@ -8,9 +9,9 @@ export class BlinksightsClient {
      * Create a new Blinksights client
      * @param apiKey The API key
      */
-    constructor(apiKey: string, apiUrl: string) {
+    constructor(apiKey: string) {
         this.axios = axios.create({
-            baseURL: apiUrl, // TODO: update this to the correct URL
+            baseURL: API_URL,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
@@ -34,16 +35,16 @@ export class BlinksightsClient {
     /**
      * Track an action event
      * @param headers The request headers
-     * @param pubKey The user's public key
-     * @param referer The referer URL
+     * @param payerPubKey The payer's public key
      * @param requestUrl The request URL
      */
-    public async trackAction(headers: Headers, pubKey: string | null, requestUrl: string | null){   
+    public async trackAction(headers: Headers, payerPubKey: string, requestUrl: string){  
+        const referrer = headers.get('referer'); // Url of the originial blink
 
         this.axios.post('/api/v1/track-action', {
-            "referer": headers.get('referer'),
-            "pubKey": pubKey,
-            "requestUrl": requestUrl
+            "payerPubKey": payerPubKey,
+            "requestUrl": requestUrl,
+            "blinkUrl": referrer
         });
     }
 }

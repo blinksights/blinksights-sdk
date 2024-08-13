@@ -24,7 +24,7 @@ export class BlinksightsClient {
      * @param url The URL of the blink being rendered
      * @param action The blink action object\
      */
-    public async trackRender(url: string, action: ActionGetResponse){
+    public async trackRenderV1(url: string, action: ActionGetResponse){
 
         this.axios.post('/api/v1/track-render', {
             "url": url,
@@ -38,7 +38,7 @@ export class BlinksightsClient {
      * @param payerPubKey The payer's public key
      * @param requestUrl The request URL
      */
-    public async trackAction(headers: Headers, payerPubKey: string, requestUrl: string){  
+    public async trackActionV1(headers: Headers, payerPubKey: string, requestUrl: string){  
         const referrer = headers.get('referer'); // Url of the originial blink
 
         this.axios.post('/api/v1/track-action', {

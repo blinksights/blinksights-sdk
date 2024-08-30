@@ -20,29 +20,43 @@ const client = new BlinksightsClient('YOUR ACCESS TOKEN');
 ```
 
 ### Track a render event in your `GET` request handler
-The URL of the Solana Blink will be passed in the request URL. You need to pass the URL to the `trackRenderV1` method to identify the Solana Blink.
+You can create an ActionGetResponse object using the `createActionGetResponseV1` method. By using this ActionGetResponse you will be able to track the performance of your Solana Blinks.
 ```typescript
-const payload: ActionGetResponse = {
-    // ... Your Get Response
-};
+const payload: ActionGetResponse = client.createActionGetResponseV1(request.url, {
+    "title": "Realms DAO Platform",
+    "icon": "<url-to-image>",
+    "description": "Vote on DAO governance proposals #1234.",
+    "label": "Vote",
+    links: {
+        actions: [
+            {
+                "label": "Vote Yes", // button text
+                "href": "/api/proposal/1234/vote?choice=yes"
+            },
+        ],
+    },
+});
 
-client.trackRenderV1(request.url, payload);
+return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: ACTIONS_CORS_HEADERS,
+});
 ```
 
 ### Track an interaction event in your `POST` request handler
-The wallet will make a `POST` request with the payer's wallet address in the request body. You can access the request body using `request.json()` and then pass the payer's public key to the `trackActionV1` method. The headers contain other useful information, such as the Solana Blink URL. You can access the headers using `request.headers` and then pass the Solana Blink URL to the `trackActionV1` method.
+The wallet will make a `POST` request with the payer's wallet address in the request body. You can access the request body using `request.json()` and then pass the payer's public key to as well as the Solana Blink URL to the `trackActionV2` method.
 ```typescript
 // The payer's public key will be in the request body
 const body = await request.json();
 
-client.trackActionV1(request.headers, body.account, request.url);
+client.trackActionV2(account, request.url);
 ```
 
 ### Track conversions
-If you want to track the conversions of your Solana Blink, you need to include a Memo instruction in the transactions so that we can search for the transactions on-chain and check its confirmation status. To do this, you can call the getActionIdentityInstructionV1 method along with the headers and the payer's public key. This function will return a transaction instruction that you can include in your transaction as follows:
+If you want to track the conversions of your Solana Blink, you need to include a memo instruction in the transactions so that we can search for the transactions on-chain and check its confirmation status. To do this, you can call the `getActionIdentityInstructionV2` method along with the payer's public key and request URL. This function will return a transaction instruction that you can include in your transaction as follows:
 ```typescript
 // Call getActionIdentityInstructionV1 in your POST request handler
-const blinksightsActionIdentityInstruction = client.getActionIdentityInstructionV1(request.headers, account);
+const blinksightsActionIdentityInstruction = client.getActionIdentityInstructionV2(account, request.url);
 
 // Add the instruction to your transaction
 const messageV0 = new TransactionMessage({

@@ -21,23 +21,61 @@ export class BlinksightsClient {
     });
   }
 
-  /**
-   * Create an ActionGetResponse object
-   * @param url The URL from the request
-   * @param action The blink action object
-   * @returns The blink action object with the links updated to include the action identifier
-   */
-  public async createActionGetResponseV1(url: string, action: ActionGetResponse) {
-    try {
-      const actionIdentifier = this.createActionIdentifier(url);
-      const identityParam = `actionId=${actionIdentifier}`;
-      const seperator = url.includes('?') ? '&' : '?';
+    /**
+     * Create an ActionGetResponse object
+     * @param url The URL from the request
+     * @param action The blink action object
+     * @returns The blink action object with the links updated to include the action identifier
+     */
+    public async createActionGetResponseV2(url: string, action: any): Promise<any> {
+        try {
+            const actionIdentifier = this.createActionIdentifier(url);
+            const identityParam = `actionId=${actionIdentifier}`;
+    
+            await this.axios.post('/api/v2/track-render', {
+                url: url,
+                action: action,
+                actionIdentifier: actionIdentifier
+            });
+    
+            // Dynamically update links if they exist and are in the expected format
+            if (action.links && Array.isArray(action.links.actions)) {
+                const updatedLinks = action.links.actions.map((link: any) => {
+                    if (typeof link.href === 'string') {
+                        const separator = link.href.includes('?') ? '&' : '?';
+                        return {
+                            ...link,
+                            href: `${link.href}${separator}${identityParam}`
+                        };
+                    }
+                    return link;
+                });
+    
+                // Return a new action object with updated links
+                return {
+                    ...action, 
+                    links: { actions: updatedLinks }
+                };
+            }
+    
+            return action; // Return the action unchanged if no links to update
+        } catch (error: any) {
+            console.error(error);
+            return action; // Return the original action if an error occurs
+        }
+    }
+    
 
-      await this.axios.post('/api/v2/track-render', {
-        url,
-        action,
-        actionIdentifier,
-      });
+    /**
+     * Create an ActionGetResponse object
+     * @param url The URL from the request
+     * @param action The blink action object
+     * @returns The blink action object with the links updated to include the action identifier
+     */
+    public async createActionGetResponseV1(url: string, action: ActionGetResponse){
+        try{
+            const actionIdentifier = this.createActionIdentifier(url);
+            const identityParam = `actionId=${actionIdentifier}`;
 
       if (action.links && action.links.actions.length > 0) {
         const links: LinkedAction[] = action.links.actions.map((link) => ({
@@ -45,12 +83,33 @@ export class BlinksightsClient {
           href: `${link.href}${seperator}${identityParam}`,
         }));
 
-        return { ...action, links: { actions: links } };
-      }
-      return action;
-    } catch (error: any) {
-      console.error(`An error occurred in createActionGetResponseV1, returning original action.: ${error}`);
-      return action;
+
+            if(action.links && action.links.actions.length > 0){
+
+                let links: LinkedAction[] = action.links.actions.map((link) => {
+                    const separator = link.href.includes('?') ? '&' : '?';
+                    return {
+                        ...link,
+                        href: `${link.href}${separator}${identityParam}`,
+                    }
+                });
+
+                const actionGetResponse: ActionGetResponse = {
+                    ...action, 
+                    links: { actions: links } 
+                };
+    
+                return actionGetResponse;
+            } else {
+                return action;
+            }
+
+             
+        } catch(error: any){
+            console.error(error);
+            return action;
+        }   
+    
     }
   }
 
@@ -139,15 +198,14 @@ export class BlinksightsClient {
     }
   }
 
-  /**
-   * Get the action identity instruction for tracking the transaction status.
-   * @param url The URL of the blink
-   * @returns TransactionInstruction
-   */
-  public async getActionIdentityInstructionV2(payerPubKey: string, requestUrl: string) {
-    try {
-      const timestamp = Date.now();
-      const memo = `BlinksightsAction|V2|${timestamp}`;
+    
+
+    /**
+     * Get the action identity instruction for tracking the transaction status.
+     * @param url The URL of the blink
+     * @returns TransactionInstruction
+     */
+    public async getActionIdentityInstructionV2(payerPubKey: string, requestUrl: string){
 
       await this.axios.post('api/v2/track-transaction', {
         memo,
@@ -155,13 +213,20 @@ export class BlinksightsClient {
         requestUrl,
       });
 
-      return new TransactionInstruction({
-        keys: [{ pubkey: new PublicKey(payerPubKey), isSigner: true, isWritable: true }],
-        data: Buffer.from(`BlinksightsAction|V2|${timestamp}`, 'utf-8'),
-        programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
-      });
-    } catch (error) {
-      console.error(`An error occurred in getActionIdentityInstructionV2: ${error}`);
+            await this.axios.post('api/v2/track-transaction',{
+                "memo": memo,
+                "payerPubKey": payerPubKey,
+                "requestUrl": requestUrl
+            });
+
+            return new TransactionInstruction({
+                keys: [{pubkey: new PublicKey(payerPubKey), isSigner: true, isWritable: true}],
+                data: Buffer.from(`BlinksightsAction|V2|${timestamp}`, "utf-8"),
+                programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
+            });
+        } catch(error){
+            console.error(error);
+        }
     }
   }
 

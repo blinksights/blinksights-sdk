@@ -60,7 +60,7 @@ export class BlinksightsClient {
     
             return action; // Return the action unchanged if no links to update
         } catch (error: any) {
-            console.error(error);
+            console.error('Could not create action response, returning original action instead. Error: ' + error);
             return action; // Return the original action if an error occurs
         }
     }
@@ -106,7 +106,7 @@ export class BlinksightsClient {
 
              
         } catch(error: any){
-            console.error(error);
+            console.error('Could not create action response, returning original action instead. Error: ' + error);
             return action;
         }   
     
@@ -124,8 +124,8 @@ export class BlinksightsClient {
                 "url": url,
                 "action": action
             });
-        } catch(error){
-            console.error(error);
+        } catch(error: any){
+            console.error('Could not track view. This method is deprecated, use createActionGetResponseV1. Error: ' + error);
         }
     }
 
@@ -145,8 +145,8 @@ export class BlinksightsClient {
                 "requestUrl": requestUrl,
                 "blinkUrl": referrer
             });
-        } catch(error){
-            console.error(error);
+        } catch(error: any){
+            console.error('Could not track interaction. This method is deprecated, use trackActionV2 instead. Error: ' + error);
         }
     }
 
@@ -162,8 +162,8 @@ export class BlinksightsClient {
                 "payerPubKey": payerPubKey,
                 "requestUrl": requestUrl,
             });
-        } catch(error){
-            console.error(error);
+        } catch(error: any){
+            console.error('Could not track interaction, error: ' + error);
         }
     }
 
@@ -192,8 +192,8 @@ export class BlinksightsClient {
                 data: Buffer.from(`BlinksightsAction|V1|${timestamp}`, "utf-8"),
                 programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
             });
-        } catch(error){
-            console.error(error);
+        } catch(error: any){
+            console.error('Could not get action identity instruction. This method is deprecated, use getActionIdentityInstructionV2 instead. Error: ' + error);
         }
 
     }
@@ -201,6 +201,7 @@ export class BlinksightsClient {
     
 
     /**
+     * !!! Experimental - This feature is still in alpha and does not work for all kind of blinks!!!
      * Get the action identity instruction for tracking the transaction status.
      * @param url The URL of the blink
      * @returns TransactionInstruction
@@ -222,12 +223,13 @@ export class BlinksightsClient {
                 data: Buffer.from(`BlinksightsAction|V2|${timestamp}`, "utf-8"),
                 programId: new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr")
             });
-        } catch(error){
-            console.error(error);
+        } catch(error: any){
+            console.error('Could not get action identity instruction. Error: ' + error);
         }
     }
 
    /**
+    * !!! Experimental - This feature is still in alpha and does not work for all kind of blinks!!!
     * Create a blink id for the given url and orgId.
     * @param url 
     * @param orgId 
